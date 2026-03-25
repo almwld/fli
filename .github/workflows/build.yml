@@ -19,6 +19,38 @@ jobs:
         flutter-version: '3.22.0'
         channel: 'stable'
 
+    - name: Clean and rebuild
+      run: |
+        # 1. حفظ الكود
+        mkdir -p /tmp/code
+        cp -r lib /tmp/code/
+        cp -r assets /tmp/code/ 2>/dev/null || true
+        cp pubspec.yaml /tmp/code/
+        cp .env /tmp/code/ 2>/dev/null || true
+        
+        # 2. حذف كل شيء باستثناء .git و /tmp/code
+        find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'tmp' -exec rm -rf {} \; 2>/dev/null || true
+        
+        # 3. إنشاء مشروع Flutter جديد من الصفر
+        flutter create --org com.fli --project-name fli --platforms android .
+        
+        # 4. استعادة الكود
+        rm -rf lib assets
+        cp -r /tmp/code/lib .
+        cp -r /tmp/code/assets . 2>/dev/null || true
+        cp /tmp/code/pubspec.yaml .
+        cp /tmp/code/.env . 2>/dev/null || true
+        
+        # 5. إنشاء مجلدات assets فارغة لتجنب أخطاء الأصول
+        mkdir -p assets/images assets/icons assets/fonts assets/animations
+        
+        # 6. إضافة flutterEmbedding
+        sed -i '/<application>/a \        <meta-data android:name="flutterEmbedding" android:value="2" />' android/app/src/main/AndroidManifest.xml
+        
+        # 7. تنظيف cache Gradle بالكامل
+        rm -rf ~/.gradle/caches/
+        rm -rf ~/.gradle/wrapper/
+
     - name: Install dependencies
       run: flutter pub get
 
