@@ -10,7 +10,8 @@ import 'package:flex_yemen/screens/product/products_screen.dart';
 import 'package:flex_yemen/screens/home/map_screen.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  const MainNavigation({super.key, this.isGuest = false});
+  final bool isGuest;
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();

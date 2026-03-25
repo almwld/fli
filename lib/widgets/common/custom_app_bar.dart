@@ -1,3 +1,5 @@
+
+# EOF for custom_app_bar.dart
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -5,6 +7,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final bool centerTitle;
+  final bool showBackButton;
 
   const CustomAppBar({
     super.key,
@@ -12,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.centerTitle = true,
+    this.showBackButton = true,
   });
 
   @override
@@ -20,7 +24,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(title, style: const TextStyle(fontFamily: 'Changa')),
       centerTitle: centerTitle,
       actions: actions,
-      leading: leading,
+      leading: showBackButton && Navigator.canPop(context)
+          ? leading ?? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            )
+          : leading,
     );
   }
 
