@@ -1,9 +1,28 @@
-import "package:flutter/material.dart";
-import 'package:flex_yemen/theme/app_theme.dart';
-import 'package:flex_yemen/widgets/common/custom_app_bar.dart';
+import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/common/custom_app_bar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildOptionItem(IconData icon, String label, VoidCallback onTap, {bool isDestructive = false}) {
+    return ListTile(
+      leading: Icon(icon, color: isDestructive ? Colors.red : null),
+      title: Text(label, style: TextStyle(color: isDestructive ? Colors.red : null)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +31,7 @@ class ProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Profile Header
+            // Profile Header
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -28,15 +47,11 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   bottom: -50,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: const CircleAvatar(
-                      radius: 50,
-                      backgroundImage: NetworkImage('https://picsum.photos/seed/profile/200/200'),
-                    ),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage('https://picsum.photos/seed/profile/200/200'),
                   ),
                 ),
               ],
@@ -45,19 +60,17 @@ class ProfileScreen extends StatelessWidget {
             const Text('محمد اليماني', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Text('m.yamani@example.com', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-            
-            // 2. Stats
+            // Stats
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildStatItem('إعلاناتي', '12'),
                 _buildStatItem('المتابعون', '450'),
-                _buildStatItem('المتابعون', '120'),
+                _buildStatItem('المتابَعون', '120'),
               ],
             ),
             const SizedBox(height: 30),
-
-            // 3. Profile Options
+            // Options
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -81,24 +94,4 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.goldPrimary)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildOptionItem(IconData icon, String title, VoidCallback onTap, {bool isDestructive = false}) {
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: isDestructive ? Colors.red : AppColors.goldPrimary),
-      title: Text(title, style: TextStyle(color: isDestructive ? Colors.red : Colors.black, fontWeight: FontWeight.w500)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-      contentPadding: EdgeInsets.zero,
-    );
-  }
 }
-'''
