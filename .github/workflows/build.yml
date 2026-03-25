@@ -44,38 +44,9 @@ jobs:
         # إضافة flutterEmbedding
         sed -i '/<application>/a \        <meta-data android:name="flutterEmbedding" android:value="2" />' android/app/src/main/AndroidManifest.xml
         
-        # فرض Kotlin 1.7.1 و Gradle 7.6.3
-        cat > android/build.gradle << 'GRADLE'
-        buildscript {
-            ext.kotlin_version = '1.7.1'
-            repositories {
-                google()
-                mavenCentral()
-            }
-            dependencies {
-                classpath 'com.android.tools.build:gradle:7.6.3'
-                classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-            }
-        }
-        allprojects {
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-        rootProject.buildDir = '../build'
-        subprojects {
-            project.buildDir = "${rootProject.buildDir}/${project.name}"
-        }
-        subprojects {
-            project.evaluationDependsOn(':app')
-        }
-        tasks.register("clean", Delete) {
-            delete rootProject.buildDir
-        }
-        GRADLE
-        
-        echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-7.6.3-all.zip" > android/gradle/wrapper/gradle-wrapper.properties
+        # تحديث Gradle و Kotlin
+        echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-all.zip" > android/gradle/wrapper/gradle-wrapper.properties
+        sed -i 's/plugins {/plugins {\n    id "org.jetbrains.kotlin.android" version "1.9.22" apply false\n/' android/settings.gradle
         
         # تنظيف cache
         rm -rf ~/.gradle/caches/
