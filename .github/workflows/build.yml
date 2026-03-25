@@ -9,53 +9,79 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Flutter
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.22.0'
-        channel: 'stable'
 
-    - name: Clean and rebuild
+    - name: Build
       run: |
-        # 1. حفظ الكود
-        mkdir -p /tmp/code
+        mkdir /tmp/code
         cp -r lib /tmp/code/
         cp -r assets /tmp/code/ 2>/dev/null || true
         cp pubspec.yaml /tmp/code/
-        cp .env /tmp/code/ 2>/dev/null || true
         
-        # 2. حذف كل شيء باستثناء .git و /tmp/code
-        find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'tmp' -exec rm -rf {} \; 2>/dev/null || true
+        rm -rf android ios
         
-        # 3. إنشاء مشروع Flutter جديد من الصفر
-        flutter create --org com.fli --project-name fli --platforms android .
+        flutter create --org com.flexyemen --project-name flex_yemen --platforms android .
         
-        # 4. استعادة الكود
         rm -rf lib assets
         cp -r /tmp/code/lib .
         cp -r /tmp/code/assets . 2>/dev/null || true
         cp /tmp/code/pubspec.yaml .
-        cp /tmp/code/.env . 2>/dev/null || true
         
-        # 5. إنشاء مجلدات assets فارغة لتجنب أخطاء الأصول
-        mkdir -p assets/images assets/icons assets/fonts assets/animations
+        mkdir -p assets/images assets/icons assets/fonts
         
-        # 6. إضافة flutterEmbedding
+        # إضافة flutterEmbedding
         sed -i '/<application>/a \        <meta-data android:name="flutterEmbedding" android:value="2" />' android/app/src/main/AndroidManifest.xml
         
-        # 7. تنظيف cache Gradle بالكامل
+        # فرض Kotlin 1.7.1 و Gradle 7.6.3
+        cat > android/build.gradle << 'GRADLE'
+        buildscript {
+            ext.kotlin_version = '1.7.1'
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:7.6.3'
+                classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+            }
+        }
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.buildDir = '../build'
+        subprojects {
+            project.buildDir = "${rootProject.buildDir}/${project.name}"
+        }
+        subprojects {
+            project.evaluationDependsOn(':app')
+        }
+        tasks.register("clean", Delete) {
+            delete rootProject.buildDir
+        }
+        GRADLE
+        
+        echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-7.6.3-all.zip" > android/gradle/wrapper/gradle-wrapper.properties
+        
+        # تنظيف cache
         rm -rf ~/.gradle/caches/
-        rm -rf ~/.gradle/wrapper/
-
-    - name: Install dependencies
-      run: flutter pub get
-
-    - name: Build APK
-      run: flutter build apk --release --split-per-abi
+        
+        flutter pub get
+        flutter build apk --release --split-per-abi
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
