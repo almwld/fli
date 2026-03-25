@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flex_yemen/theme/app_theme.dart';
-import 'package:flex_yemen/providers/auth_provider.dart';
-import 'package:flex_yemen/routes/app_routes.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../core/utils/helpers.dart';
+import '../../theme/app_theme.dart';
+import 'register_screen.dart';
+import '../home/main_navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,85 +15,122 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  Future<void> _login() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      Helpers.showSnackBar(context, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.signIn(_emailController.text, _passwordController.text);
+
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+      );
+    } else if (mounted) {
+      Helpers.showErrorSnackBar(context, authProvider.error ?? 'فشل تسجيل الدخول');
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 80),
-              const Icon(Icons.lock_outline, size: 80, color: AppColors.goldPrimary),
-              const SizedBox(height: 20),
-              const Text(
-                'مرحباً بك مجدداً!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'سجل دخولك لمتابعة تجربة التسوق',
-                style: TextStyle(color: Colors.grey),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 60),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.goldGradient,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Icon(Icons.shopping_bag, size: 50, color: Colors.black),
               ),
               const SizedBox(height: 40),
-              TextFormField(
+              const Text('مرحباً بك', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('سجل دخول للمتابعة', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              const SizedBox(height: 40),
+              TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'البريد الإلكتروني / رقم الهاتف',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  hintText: 'البريد الإلكتروني',
+                  prefixIcon: const Icon(Icons.email),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (value) => value!.isEmpty ? 'يرجى إدخال البريد الإلكتروني' : null,
               ),
-              const SizedBox(height: 20),
-              TextFormField(
+              const SizedBox(height: 16),
+              TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'كلمة المرور',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                validator: (value) => value!.isEmpty ? 'يرجى إدخال كلمة المرور' : null,
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text('نسيت كلمة المرور؟', style: TextStyle(color: AppColors.goldPrimary)),
+                  hintText: 'كلمة المرور',
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.goldPrimary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.goldColor,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('تسجيل الدخول', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () async {
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  await authProvider.signInAsGuest();
+                  if (mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const MainNavigation(isGuest: true)),
+                    );
+                  }
+                },
+                child: const Text('الدخول كضيف'),
+              ),
+              const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text('ليس لديك حساب؟'),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                    child: const Text('إنشاء حساب جديد', style: TextStyle(color: AppColors.goldPrimary, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                      );
+                    },
+                    child: const Text('إنشاء حساب'),
                   ),
                 ],
               ),
@@ -101,15 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.login(_emailController.text, _passwordController.text);
-      setState(() => _isLoading = false);
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.mainNavigation);
-      }
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

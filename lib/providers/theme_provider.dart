@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import '../services/local_storage_service.dart';
 
-class ThemeProvider with ChangeNotifier {
+class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
-  final Box _settingsBox = Hive.box('settings');
-
-  ThemeProvider() {
-    _isDarkMode = _settingsBox.get('isDarkMode', defaultValue: false);
-  }
 
   bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+  ThemeProvider() {
+    _isDarkMode = LocalStorageService.getDarkMode();
+  }
 
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
-    _settingsBox.put('isDarkMode', _isDarkMode);
+    LocalStorageService.setDarkMode(_isDarkMode);
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    _isDarkMode = value;
+    LocalStorageService.setDarkMode(value);
     notifyListeners();
   }
 }
